@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Boost-Mida | منصة تبادل التفاعل وزيادة المتابعين</title>
+    <meta name="description" content="Boost-Mida المنصة الأفضل لزيادة التفاعل الحقيقي. احصل على مشاهدات، اشتراكات، ولايكات عبر تبادل النقاط مع مستخدمين حقيقيين بكل سهولة.">
+    <meta name="keywords" content="Boost-Mida, زيادة متابعين, تبادل تفاعل, زيادة لايكات, ربح نقاط, دعم قنوات, سوشيال ميديا">
+    <meta name="robots" content="index, follow">
+    
+    <meta property="og:title" content="Boost-Mida | ابدأ بزيادة تفاعلك الآن">
+    <meta property="og:description" content="انضم إلينا وزد تفاعل حساباتك مجاناً عبر منصة Boost-Mida الاحترافية.">
+    <meta property="og:type" content="website">
+
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --primary: #3b82f6; --accent: #10b981; --text: #f1f5f9; --muted: #94a3b8; --danger: #ef4444; --binance: #f3ba2f; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; }
+        header { background: rgba(30, 41, 59, 0.9); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 1000; }
+        .logo { font-weight: 900; font-size: 1.5rem; color: var(--primary); cursor: pointer; }
+        .points-box { background: rgba(16, 185, 129, 0.1); color: var(--accent); padding: 8px 15px; border-radius: 50px; font-weight: bold; border: 1px solid var(--accent); }
+        main { padding: 20px; max-width: 600px; margin: 0 auto; }
+        .view { display: none; animation: fadeIn 0.3s ease; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid #334155; margin-bottom: 20px; }
+        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-accent { background: var(--accent); color: white; }
+        .btn-binance { background: var(--binance); color: #000; }
+        .btn-danger { background: var(--danger); color: white; padding: 5px 10px; font-size: 0.7rem; width: auto; display: inline-flex; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--accent); color: white; padding: 12px 30px; border-radius: 50px; display: none; z-index: 9999; }
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .copy-box { background: #000; padding: 10px; border-radius: 10px; font-size: 0.7rem; color: var(--binance); cursor: pointer; text-align: center; border: 1px dashed var(--binance); margin: 10px 0; }
+        #user-list { text-align: right; max-height: 300px; overflow-y: auto; background: #000; padding: 10px; border-radius: 10px; font-size: 0.75rem; }
+        .user-item { border-bottom: 1px solid #222; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; }
+        .track-item { background: rgba(59, 130, 246, 0.1); border: 1px solid var(--primary); padding: 10px; border-radius: 10px; margin-top: 10px; text-align: right; font-size: 0.85rem; }
+        .user-counter { font-size: 0.8rem; color: var(--muted); margin-top: 10px; text-align: center; border-top: 1px solid #334155; padding-top: 10px; }
+        .online-dot { height: 8px; width: 8px; background-color: var(--accent); border-radius: 50%; display: inline-block; margin-left: 5px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <header id="header" style="display:none">
+        <div class="logo" id="admin-trigger">BOOST-MIDA</div>
+        <div class="points-box">💰 <span id="user-points">0</span></div>
+    </header>
+
+    <main>
+        <div id="toast" class="toast"></div>
+
+        <section id="auth-view" class="view active">
+            <div class="card">
+                <h2 style="text-align:center; margin-bottom:20px;">تسجيل الدخول / الحساب</h2>
+                <input type="text" id="auth-name" placeholder="اسم المستخدم">
+                <input type="password" id="auth-pass" placeholder="كلمة المرور">
+                <div id="reg-extra">
+                    <select id="auth-interest">
+                        <option value="all">كل الاهتمامات</option>
+                        <option value="gaming">ألعاب</option>
+                        <option value="vlogs">فلوقات</option>
+                    </select>
+                    <p style="font-size:0.7rem; color:var(--muted); margin-bottom:10px;">بضغطك على دخول فأنت توافق على الشروط ومنع الغش.</p>
+                </div>
+                <button class="btn btn-primary" onclick="handleAuth()">دخول إلى المنصة</button>
+                <div class="user-counter">
+                    <span class="online-dot"></span> انضم إلينا <b id="total-users-auth">0</b> مستخدم حتى الآن
+                </div>
+            </div>
+        </section>
+
+        <section id="dash-view" class="view">
+            <div class="card" style="text-align: center;">
+                <h3 id="welcome-msg">مرحباً</h3>
+                <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 15px;">إجمالي أعضاء المنصة: <span id="total-users-dash" style="color:var(--primary); font-weight:bold;">0</span></p>
+                <div style="margin-top:20px">
+                    <button class="btn btn-accent" onclick="startEarning()">كسب النقاط <i class="fa-solid fa-coins"></i></button>
+                    <button class="btn btn-primary" onclick="showView('create-view')">إضافة مهمة <i class="fa-solid fa-plus"></i></button>
+                    <button class="btn btn-binance" onclick="showView('shop-view')">متجر بينانس <i class="fa-solid fa-wallet"></i></button>
+                    <button class="btn btn-ghost" onclick="loadMyProgress()" style="color:var(--primary); border:1px solid var(--primary); margin-top:10px;">📊 مراقبة تقدم حملاتي</button>
+                    <button class="btn btn-ghost" onclick="logout()" style="color:var(--danger); margin-top:10px;">تسجيل الخروج</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="progress-view" class="view">
+            <button onclick="showView('dash-view')" class="btn-ghost">← عودة للرئيسية</button>
+            <div class="card">
+                <h3 style="text-align:center; margin-bottom:15px;">حملاتك الحالية</h3>
+                <div id="my-progress-list">جاري تحميل البيانات...</div>
+            </div>
+        </section>
+
+        <section id="earn-view" class="view">
+            <div class="card">
+                <div id="mission-info" style="font-weight: bold; text-align: center; margin-bottom:10px;">جاري جلب المهمة...</div>
+                <div id="timer" style="text-align:center; font-size:2rem; color:var(--accent)">00:15</div>
+                <div id="media-placeholder" style="height:200px; background:#000; border-radius:15px; margin:15px 0; display:flex; align-items:center; justify-content:center; text-align:center; padding:10px; font-size:0.8rem; color:var(--muted);">
+                    يجب الضغط على الزر أدناه لبدء التفاعل وتفعيل العداد
+                </div>
+                <button id="start-btn" class="btn btn-accent" onclick="triggerMission()">بدء التفاعل الآن</button>
+                <button id="claim-btn" class="btn btn-primary" style="display:none" onclick="rewardUser()">استلام النقاط</button>
+                <button class="btn btn-ghost" onclick="startEarning()" style="color:var(--muted)">تخطي المهمة التالي ←</button>
+            </div>
+        </section>
+
+        <section id="shop-view" class="view">
+            <button onclick="showView('dash-view')" class="btn-ghost">← عودة</button>
+            <div class="card">
+                <h2 style="color:var(--binance); text-align:center;">باقات USDT Binance</h2>
+                <div class="copy-box" onclick="copyWallet()">عنوان المحفظة (اضغط للنسخ): <br> <b id="wallet-addr">TMBcG2uGJhmchpB1HsPzj1PKgi2W7P6ETP</b></div>
+                <div class="shop-grid">
+                    <div class="shop-card" style="background:#000; padding:10px; border-radius:10px; text-align:center;">
+                        <p>150 نقطة</p><b>1.99$</b><button class="btn btn-binance" onclick="setOrder(1.99, 150)" style="padding:5px; font-size:0.7rem;">شراء</button>
+                    </div>
+                    <div class="shop-card" style="background:#000; padding:10px; border-radius:10px; text-align:center;">
+                        <p>400 نقطة</p><b>4.99$</b><button class="btn btn-binance" onclick="setOrder(4.99, 400)" style="padding:5px; font-size:0.7rem;">شراء</button>
+                    </div>
+                    <div class="shop-card" style="background:#000; padding:10px; border-radius:10px; text-align:center;">
+                        <p>1000 نقطة</p><b>8.50$</b><button class="btn btn-binance" onclick="setOrder(8.50, 1000)" style="padding:5px; font-size:0.7rem;">شراء</button>
+                    </div>
+                    <div class="shop-card" style="background:#000; padding:10px; border-radius:10px; text-align:center; border:1px solid var(--accent)">
+                        <p>2500 نقطة</p><b>15.0$</b><button class="btn btn-binance" onclick="setOrder(15.0, 2500)" style="padding:5px; font-size:0.7rem;">شراء</button>
+                    </div>
+                </div>
+                <div id="pay-confirm" style="display:none; margin-top:20px; border-top:1px solid #334155; padding-top:15px;">
+                    <p style="font-size:0.8rem; margin-bottom:10px;">ارفع صورة الإثبات لإكمال الطلب:</p>
+                    <input type="file" id="proof-img" accept="image/*">
+                    <button class="btn btn-primary" onclick="submitOrder()">إرسال الإثبات للأدمن</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="create-view" class="view">
+            <button onclick="showView('dash-view')" class="btn-ghost">← عودة</button>
+            <div class="card">
+                <h3>إطلاق حملة</h3>
+                <select id="c-type" onchange="calc()"><option value="2">مشاهدة (2)</option><option value="5">اشتراك (5)</option><option value="3">لايك (3)</option></select>
+                <input type="number" id="c-count" placeholder="العدد" oninput="calc()">
+                <input type="url" id="c-url" placeholder="الرابط">
+                <p>التكلفة: <span id="total-cost" style="color:var(--primary)">0</span> نقطة</p>
+                <button class="btn btn-primary" onclick="pushCamp()">تأكيد ونشر</button>
+            </div>
+        </section>
+
+        <section id="admin-view" class="view">
+            <button onclick="showView('dash-view')" class="btn-ghost">← إغلاق</button>
+            <div class="card">
+                <h2 style="color:var(--danger)">إدارة المستخدمين</h2>
+                <div id="user-list">جاري التحميل...</div>
+                <hr style="border:0; border-top:1px solid #334155; margin:15px 0;">
+                <input type="text" id="adm-target" placeholder="الاسم للشحن">
+                <input type="number" id="adm-amount" placeholder="النقاط">
+                <button class="btn btn-primary" onclick="adminAddPoints()">إضافة النقاط الآن</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyDMo7uIi4KXrT448OeAqVoZyZMpg1AhWAM", authDomain: "boost-media-fcb52.firebaseapp.com", projectId: "boost-media-fcb52", databaseURL: "https://boost-media-fcb52-default-rtdb.firebaseio.com/", storageBucket: "boost-media-fcb52.firebasestorage.app", appId: "1:292532908132:web:84ba6b47ef9faa7a08ef71" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const botToken = "8591640832:AAEawSls4SpyUuDGugDayPCjOF_3BSbgyq0";
+        const adminChatId = "7410815075";
+
+        let userData = { name: '', points: 0 };
+        let timerVal, curPoints = 0, curUrl = "", curCampId = "", isClaiming = false, adminClicks = 0;
+
+        window.onload = () => {
+            updateTotalUsersCount();
+            const savedName = localStorage.getItem('mida_user');
+            const savedPass = localStorage.getItem('mida_pass');
+            if(savedName && savedPass) {
+                document.getElementById('auth-name').value = savedName;
+                document.getElementById('auth-pass').value = savedPass;
+                handleAuth();
+            }
+        };
+
+        function updateTotalUsersCount() {
+            db.ref('users').on('value', snap => {
+                const count = snap.numChildren();
+                document.getElementById('total-users-auth').innerText = count;
+                document.getElementById('total-users-dash').innerText = count;
+            });
+        }
+
+        function handleAuth() {
+            const name = document.getElementById('auth-name').value.trim().toLowerCase();
+            const pass = document.getElementById('auth-pass').value.trim();
+            if(!name || !pass) return notify("أدخل البيانات", "danger");
+            db.ref('users/' + name).once('value', snap => {
+                if(snap.exists()) {
+                    if(snap.val().password === pass) {
+                        userData.name = name; userData.points = snap.val().points;
+                        localStorage.setItem('mida_user', name); localStorage.setItem('mida_pass', pass);
+                        loginSuccess();
+                    } else { notify("كلمة المرور خاطئة!", "danger"); }
+                } else {
+                    db.ref('users/' + name).set({ password: pass, points: 10, interest: document.getElementById('auth-interest').value });
+                    userData.name = name; userData.points = 10;
+                    localStorage.setItem('mida_user', name); localStorage.setItem('mida_pass', pass);
+                    loginSuccess();
+                }
+            });
+        }
+
+        function loginSuccess() { document.getElementById('header').style.display = 'flex'; updateUI(); showView('dash-view'); }
+        function logout() { localStorage.clear(); location.reload(); }
+        function updateUI() { document.getElementById('user-points').innerText = userData.points; db.ref('users/' + userData.name + '/points').set(userData.points); document.getElementById('welcome-msg').innerText = `أهلاً، ${userData.name}`; }
+
+        function startEarning() {
+            resetEarn(); showView('earn-view');
+            db.ref('campaigns').limitToLast(50).once('value', snap => {
+                const data = snap.val(); if(!data) { exitEarn(); return notify("لا مهام", "danger"); }
+                const keys = Object.keys(data).filter(k => data[k].count > 0 && data[k].owner !== userData.name);
+                if(keys.length === 0) { exitEarn(); return notify("لا توجد مهام جديدة حالياً", "primary"); }
+                
+                const k = keys[Math.floor(Math.random()*keys.length)];
+                const camp = data[k];
+                curUrl = camp.url;
+                curCampId = k;
+                curPoints = camp.type.includes("5") ? 5 : (camp.type.includes("3") ? 3 : 2);
+                document.getElementById('mission-info').innerText = `المهمة: ${camp.type}`;
+            });
+        }
+
+        function triggerMission() {
+            window.open(curUrl, '_blank');
+            document.getElementById('start-btn').style.display = 'none';
+            document.getElementById('media-placeholder').innerHTML = `<p style="color:var(--accent)">يتم احتساب الوقت... ابقَ في الرابط</p>`;
+            let s = 15;
+            timerVal = setInterval(() => {
+                s--; document.getElementById('timer').innerText = `00:${s<10?'0'+s:s}`;
+                if(s<=0) { clearInterval(timerVal); document.getElementById('claim-btn').style.display='flex'; }
+            }, 1000);
+        }
+
+        function rewardUser() {
+            if(isClaiming) return; isClaiming = true;
+            userData.points += curPoints;
+            db.ref('campaigns/' + curCampId + '/count').transaction(c => (c > 0 ? c - 1 : 0));
+            updateUI(); notify(`+${curPoints} نقطة`);
+            startEarning();
+        }
+
+        function loadMyProgress() {
+            showView('progress-view');
+            const list = document.getElementById('my-progress-list');
+            list.innerHTML = "جاري التحميل...";
+            db.ref('campaigns').orderByChild('owner').equalTo(userData.name).once('value', snap => {
+                list.innerHTML = "";
+                if(!snap.exists()) { list.innerHTML = "<p style='text-align:center; color:var(--muted)'>ليس لديك حملات حالية</p>"; return; }
+                snap.forEach(child => {
+                    const c = child.val();
+                    list.innerHTML += `<div class="track-item">
+                        <b>النوع:</b> ${c.type} <br>
+                        <b>العدد المتبقي:</b> <span style="color:var(--accent)">${c.count}</span> تفاعل <br>
+                        <small style="word-break:break-all;">${c.url}</small>
+                    </div>`;
+                });
+            });
+        }
+
+        function resetEarn() { clearInterval(timerVal); isClaiming = false; document.getElementById('timer').innerText="00:15"; document.getElementById('start-btn').style.display='flex'; document.getElementById('claim-btn').style.display='none'; document.getElementById('media-placeholder').innerText="اضغط الزر لبدء التفاعل"; }
+        function exitEarn() { resetEarn(); showView('dash-view'); }
+
+        function setOrder(usd, pts) { window.activeOrder = { usd, pts }; document.getElementById('pay-confirm').style.display = 'block'; }
+        function copyWallet() { navigator.clipboard.writeText(document.getElementById('wallet-addr').innerText); notify("تم النسخ"); }
+        async function submitOrder() {
+            const file = document.getElementById('proof-img').files[0]; if(!file) return notify("ارفع الصورة", "danger");
+            const formData = new FormData(); formData.append('chat_id', adminChatId); formData.append('photo', file);
+            formData.append('caption', `📦 طلب شحن\n👤 ${userData.name}\n💰 ${window.activeOrder.pts} ن (${window.activeOrder.usd}$)`);
+            const res = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData });
+            if(res.ok) { notify("تم الإرسال"); document.getElementById('pay-confirm').style.display='none'; }
+        }
+
+        document.getElementById('admin-trigger').onclick = () => {
+            adminClicks++;
+            if(adminClicks >= 5) {
+                adminClicks = 0;
+                if(prompt("كلمة السر:") === "Bachir*12") { loadUsers(); showView('admin-view'); }
+            }
+        };
+
+        function loadUsers() {
+            db.ref('users').once('value', snap => {
+                let h = "";
+                snap.forEach(u => {
+                    h += `<div class="user-item">
+                            <span>${u.key} | <small>${u.val().password}</small> | 💰${u.val().points}</span>
+                            <button class="btn btn-danger" onclick="deleteUser('${u.key}')">حذف</button>
+                          </div>`;
+                });
+                document.getElementById('user-list').innerHTML = h;
+            });
+        }
+
+        function deleteUser(key) { if(confirm(`حذف ${key}؟`)) { db.ref('users/' + key).remove(); loadUsers(); } }
+        function adminAddPoints() {
+            const u = document.getElementById('adm-target').value.toLowerCase();
+            const p = parseInt(document.getElementById('adm-amount').value);
+            db.ref('users/' + u + '/points').transaction(c => (c || 0) + p);
+            notify("تم الشحن"); loadUsers();
+        }
+
+        function showView(id) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+        function notify(m, t) { const o = document.getElementById('toast'); o.innerText = m; o.style.background = t==="danger"?"#ef4444":"#10b981"; o.style.display="block"; setTimeout(()=>o.style.display="none", 3000); }
+        function calc() { document.getElementById('total-cost').innerText = document.getElementById('c-type').value * (document.getElementById('c-count').value || 0); }
+        function pushCamp() {
+            const cost = parseInt(document.getElementById('total-cost').innerText);
+            const count = parseInt(document.getElementById('c-count').value);
+            if(userData.points < cost) return notify("لا رصيد", "danger");
+            if(!count || count <= 0) return notify("أدخل عدداً صحيحاً", "danger");
+            
+            db.ref('campaigns').push({ 
+                url: document.getElementById('c-url').value, 
+                type: document.getElementById('c-type').selectedOptions[0].text,
+                count: count,
+                owner: userData.name 
+            }).then(() => {
+                userData.points -= cost; 
+                updateUI(); 
+                notify("تم النشر بنجاح"); 
+                showView('dash-view');
+            });
+        }
+    </script>
+</body>
+</html>
